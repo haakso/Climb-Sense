@@ -101,69 +101,8 @@ def process_files(file_list, is_image=True):
                 cv2.destroyAllWindows()
                 print(f"Annotated video saved as {output_video}")
 
-# Ask user to choose between "photo", "video", or "webcam"
-print("Choose mode of detection:")
-print("1. Photo")
-print("2. Video")
-print("3. Webcam")
-choice = input("Enter choice (1/2/3): ")
 
-if choice == '1':
-    # Photo Mode: Process multiple image files
-    file_list = input("Enter image file paths separated by commas: ").split(',')
-    file_list = [file.strip() for file in file_list]
-    process_files(file_list, is_image=True)
+file_list = input("Enter video file paths separated by commas: ").split(',')
+file_list = [file.strip() for file in file_list]
+process_files(file_list, is_image=False)
 
-elif choice == '2':
-    # Video Mode: Process multiple video files
-    file_list = input("Enter video file paths separated by commas: ").split(',')
-    file_list = [file.strip() for file in file_list]
-    process_files(file_list, is_image=False)
-
-elif choice == '3':
-    # Webcam Mode: Process live webcam feed
-    cap = cv2.VideoCapture(0)  # Open the webcam (default is 0)
-
-    if not cap.isOpened():
-        print("Error: Could not open webcam.")
-    else:
-        # Get webcam properties
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        fps = cap.get(cv2.CAP_PROP_FPS)
-
-        # Define the codec and create VideoWriter object
-        output_video = 'annotated_webcam_output.avi'
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        out = cv2.VideoWriter(output_video, fourcc, fps, (width, height))
-
-        with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
-            while True:
-                # Capture frame-by-frame from the webcam
-                ret, frame = cap.read()
-
-                if not ret:
-                    print("Failed to capture frame.")
-                    break
-
-                # Process the current frame
-                annotated_frame = annotate_frame(frame, pose)
-
-                # Write the annotated frame to the output video
-                out.write(annotated_frame)
-
-                # Display the frame with annotations
-                cv2.imshow('Live Pose Detection - Webcam', annotated_frame)
-
-                # Exit when 'q' is pressed
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    print("Exiting webcam feed...")
-                    break
-
-        cap.release()
-        out.release()
-        cv2.destroyAllWindows()
-        print(f"Annotated webcam video saved as {output_video}")
-
-else:
-    print("Invalid choice. Please restart the program and select 1, 2, or 3.")
