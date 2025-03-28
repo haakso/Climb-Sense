@@ -44,62 +44,47 @@ def process_files(file_list, is_image=True):
             min_tracking_confidence=0.5) as pose:
 
         for file in file_list:
-            if is_image:
-                # Process an image
-                img = cv2.imread(file)
-                if img is None:
-                    print(f"Error loading image {file}")
-                else:
-                    annotated_img = annotate_frame(img, pose)
-                    # Save and show the annotated image
-                    output_img_path = f'annotated_{os.path.basename(file)}'
-                    cv2.imwrite(output_img_path, annotated_img)
-                    print(f"Annotated image saved as {output_img_path}")
-                    cv2.imshow(f'Pose Detection - Image: {os.path.basename(file)}', annotated_img)
-                    cv2.waitKey(0)  # Wait for any key press to close image window
-                    cv2.destroyAllWindows()
-            else:
-                # Process a video
-                cap = cv2.VideoCapture(file)
-                if not cap.isOpened():
-                    print(f"Error opening video {file}")
-                    continue
+            # Process a video
+            cap = cv2.VideoCapture(file)
+            if not cap.isOpened():
+                print(f"Error opening video {file}")
+                continue
 
-                # Get video properties
-                width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                fps = cap.get(cv2.CAP_PROP_FPS)
+            # Get video properties
+            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            fps = cap.get(cv2.CAP_PROP_FPS)
 
-                # Define the codec and create VideoWriter object
-                output_video = f'annotated_{os.path.basename(file)}'
-                fourcc = cv2.VideoWriter_fourcc(*'XVID')
-                out = cv2.VideoWriter(output_video, fourcc, fps, (width, height))
+            # Define the codec and create VideoWriter object
+            output_video = f'annotated_{os.path.basename(file)}'
+            fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            out = cv2.VideoWriter(output_video, fourcc, fps, (width, height))
 
-                while cap.isOpened():
-                    success, frame = cap.read()
-                    if not success:
-                        print("End of video or error reading frame.")
-                        break
+            while cap.isOpened():
+                success, frame = cap.read()
+                if not success:
+                    print("End of video or error reading frame.")
+                    break
 
-                    # Process the current frame
-                    annotated_frame = annotate_frame(frame, pose)
+                # Process the current frame
+                annotated_frame = annotate_frame(frame, pose)
 
-                    # Write the annotated frame to the output video
-                    out.write(annotated_frame)
+                # Write the annotated frame to the output video
+                out.write(annotated_frame)
 
-                    # Display the annotated frame
-                    window_name = f'Pose Detection - Video {os.path.basename(file)}'
-                    cv2.imshow(window_name, annotated_frame)
+                # Display the annotated frame
+                window_name = f'Pose Detection - Video {os.path.basename(file)}'
+                cv2.imshow(window_name, annotated_frame)
 
-                    # Exit on pressing 'q'
-                    if cv2.waitKey(30) & 0xFF == ord('q'):
-                        print("Exiting video display...")
-                        break
+                # Exit on pressing 'q'
+                if cv2.waitKey(30) & 0xFF == ord('q'):
+                    print("Exiting video display...")
+                    break
 
-                cap.release()
-                out.release()
-                cv2.destroyAllWindows()
-                print(f"Annotated video saved as {output_video}")
+            cap.release()
+            out.release()
+            cv2.destroyAllWindows()
+            print(f"Annotated video saved as {output_video}")
 
 
 file_list = input("Enter video file paths separated by commas: ").split(',')
