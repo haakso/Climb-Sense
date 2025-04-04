@@ -21,14 +21,6 @@ def annotate_frame(frame, pose):
 
     # Annotate the frame if landmarks are detected
     if results.pose_landmarks:
-        """
-        # Print coordinates of the nose (example)
-        print(
-            f'Nose coordinates: ('
-            f'{results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].x * width}, '
-            f'{results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].y * height})'
-        )
-        """
         # Calculate and display joint angles
         # Get coordinates
         landmarks = results.pose_landmarks.landmark
@@ -141,8 +133,6 @@ def process_files(file_list, is_image=True):
             out.release()
         cv2.destroyAllWindows()
         print(f"Annotated video saved as {output_video}")
-
-
 
 
 file_list = input("Enter video file paths separated by commas: ").split(',')
