@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import os
+import numpy as np
 
 # Initialize MediaPipe Pose solution
 mp_drawing = mp.solutions.drawing_utils
@@ -20,13 +21,48 @@ def annotate_frame(frame, pose):
 
     # Annotate the frame if landmarks are detected
     if results.pose_landmarks:
-        # Print coordinates of the nose (example)
-        print(
-            f'Nose coordinates: ('
-            f'{results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].x * width}, '
-            f'{results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].y * height})'
-        )
+        # Calculate and display joint angles
+        # Get coordinates
+        landmarks = results.pose_landmarks.landmark
+        # Left arm
+        l_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
+        l_elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x,landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
+        l_wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x,landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
 
+        # Right arm
+        r_shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
+        r_elbow = [landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].y]
+        r_wrist = [landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].y]
+
+        # Left leg
+        l_hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x,landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
+        l_knee = [landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x,landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y]
+        l_ankle = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x,landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
+
+        # Right leg
+        r_hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
+        r_knee = [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
+        r_ankle = [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]
+                
+        # Calculate angles
+        l_arm_angle = calculate_angle(l_shoulder, l_elbow, l_wrist)
+        r_arm_angle = calculate_angle(r_shoulder, r_elbow, r_wrist)
+        l_leg_angle = calculate_angle(l_hip, l_knee, l_ankle)
+        r_leg_angle = calculate_angle(r_hip, r_knee, r_ankle)
+
+        # Visualize angle
+        joints = {
+            "Left Arm": (l_elbow, l_arm_angle),
+            "Right Arm": (r_elbow, r_arm_angle),
+            "Left Leg": (l_knee, l_leg_angle),
+            "Right Leg": (r_knee, r_leg_angle)
+        }
+        
+        for i, (joint, (_, angle)) in enumerate(joints.items()):
+            text_position = (width - 200, 30 + i * 30)  # fixed position near top-right
+            cv2.putText(frame, f"{joint}: {int(angle)}°", text_position,
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+  
         # Draw landmarks on the frame
         mp_drawing.draw_landmarks(
             frame,
@@ -36,7 +72,21 @@ def annotate_frame(frame, pose):
         )
     return frame
 
-# Function to handle multiple inputs for photo and video
+# Function to calculate joint angle
+def calculate_angle(a,b,c):
+    a = np.array(a) # First
+    b = np.array(b) # Mid
+    c = np.array(c) # End
+    
+    radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
+    angle = np.abs(radians*180.0/np.pi)
+    
+    if angle >180.0:
+        angle = 360-angle
+        
+    return angle 
+
+# Function to handle video
 def process_files(file_list, is_image=True):
     with mp_pose.Pose(
             static_image_mode=is_image,  # Static mode for images, dynamic for videos
@@ -75,7 +125,7 @@ def process_files(file_list, is_image=True):
                 # Display the annotated frame
                 window_name = f'Pose Detection - Video {os.path.basename(file)}'
                 cv2.imshow(window_name, annotated_frame)
-
+                           
                 # Exit on pressing 'q'
                 if cv2.waitKey(30) & 0xFF == ord('q'):
                     print("Exiting video display...")
@@ -83,8 +133,8 @@ def process_files(file_list, is_image=True):
 
             cap.release()
             out.release()
-            cv2.destroyAllWindows()
-            print(f"Annotated video saved as {output_video}")
+        cv2.destroyAllWindows()
+        print(f"Annotated video saved as {output_video}")
 
 
 file_list = input("Enter video file paths separated by commas: ").split(',')
