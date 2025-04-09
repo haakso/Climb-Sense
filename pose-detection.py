@@ -57,10 +57,12 @@ def annotate_frame(frame, pose):
             "Left Leg": (l_knee, l_leg_angle),
             "Right Leg": (r_knee, r_leg_angle)
         }
-        for joint, (coord, angle) in joints.items():
-            text_position = tuple(np.multiply(coord, [640, 480]).astype(int))
-            cv2.putText(frame, f"{joint}: {int(angle)}°", text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-                
+        
+        for i, (joint, (_, angle)) in enumerate(joints.items()):
+            text_position = (width - 200, 30 + i * 30)  # fixed position near top-right
+            cv2.putText(frame, f"{joint}: {int(angle)}°", text_position,
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+  
         # Draw landmarks on the frame
         mp_drawing.draw_landmarks(
             frame,
