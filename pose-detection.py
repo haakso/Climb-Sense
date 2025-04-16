@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import os
 import numpy as np
+import csv
 
 # Initialize MediaPipe Pose solution
 mp_drawing = mp.solutions.drawing_utils
@@ -19,6 +20,7 @@ def annotate_frame(frame, pose):
     # Process the frame to get pose landmarks
     results = pose.process(frame_rgb)
 
+    angles = [None, None, None, None]
     # Annotate the frame if landmarks are detected
     if results.pose_landmarks:
         # Calculate and display joint angles
@@ -57,6 +59,7 @@ def annotate_frame(frame, pose):
             "Left Leg": (l_knee, l_leg_angle),
             "Right Leg": (r_knee, r_leg_angle)
         }
+        angles = [l_arm_angle, r_arm_angle, l_leg_angle, r_leg_angle]
         
         for i, (joint, (_, angle)) in enumerate(joints.items()):
             text_position = (width - 200, 30 + i * 30)  # fixed position near top-right
@@ -70,7 +73,7 @@ def annotate_frame(frame, pose):
             mp_pose.POSE_CONNECTIONS,
             landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
         )
-    return frame
+    return frame, angles
 
 # Function to calculate joint angle
 def calculate_angle(a,b,c):
@@ -110,29 +113,40 @@ def process_files(file_list, is_image=True):
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
             out = cv2.VideoWriter(output_video, fourcc, fps, (width, height))
 
-            while cap.isOpened():
-                success, frame = cap.read()
-                if not success:
-                    print("End of video or error reading frame.")
-                    break
+            # Initialize CSV file
+            angle_csv = f'joint_angles_{os.path.basename(file)}.csv'
+            with open(angle_csv, 'w', newline='') as csv_file:
+                writer = csv.writer(csv_file)
+                writer.writerow(['Frame', 'Left Arm Angle', 'Right Arm Angle', 'Left Leg Angle', 'Right Leg Angle'])
+                frame_index = 0
 
-                # Process the current frame
-                annotated_frame = annotate_frame(frame, pose)
+                while cap.isOpened():
+                    success, frame = cap.read()
+                    if not success:
+                        print("End of video or error reading frame.")
+                        break
 
-                # Write the annotated frame to the output video
-                out.write(annotated_frame)
+                    # Process the current frame
+                    annotated_frame, angles = annotate_frame(frame, pose)
 
-                # Display the annotated frame
-                window_name = f'Pose Detection - Video {os.path.basename(file)}'
-                cv2.imshow(window_name, annotated_frame)
-                           
-                # Exit on pressing 'q'
-                if cv2.waitKey(30) & 0xFF == ord('q'):
-                    print("Exiting video display...")
-                    break
+                    writer.writerow([frame_index] + list(map(float, angles)))
+                    frame_index += 1
+
+                    # Write the annotated frame to the output video
+                    out.write(annotated_frame)
+
+                    # Display the annotated frame
+                    window_name = f'Pose Detection - Video {os.path.basename(file)}'
+                    cv2.imshow(window_name, annotated_frame)
+                            
+                    # Exit on pressing 'q'
+                    if cv2.waitKey(30) & 0xFF == ord('q'):
+                        print("Exiting video display...")
+                        break
 
             cap.release()
             out.release()
+            print(f"Joint angles saved as {angle_csv}")
         cv2.destroyAllWindows()
         print(f"Annotated video saved as {output_video}")
 
