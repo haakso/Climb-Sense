@@ -103,16 +103,6 @@ def process_files(file_list, is_image=True):
                 print(f"Error opening video {file}")
                 continue
 
-            # Get video properties
-            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            fps = cap.get(cv2.CAP_PROP_FPS)
-
-            # Define the codec and create VideoWriter object
-            output_video = f'annotated_{os.path.basename(file)}'
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            out = cv2.VideoWriter(output_video, fourcc, fps, (width, height))
-
             # Initialize CSV file
             angle_csv = f'joint_angles_{os.path.basename(file)}.csv'
             with open(angle_csv, 'w', newline='') as csv_file:
@@ -132,9 +122,8 @@ def process_files(file_list, is_image=True):
                     writer.writerow([frame_index] + list(map(float, angles)))
                     frame_index += 1
 
-                    # Write the annotated frame to the output video
-                    out.write(annotated_frame)
-
+                    """
+                    # Uncomment to display the annotated frame
                     # Display the annotated frame
                     window_name = f'Pose Detection - Video {os.path.basename(file)}'
                     cv2.imshow(window_name, annotated_frame)
@@ -143,12 +132,10 @@ def process_files(file_list, is_image=True):
                     if cv2.waitKey(30) & 0xFF == ord('q'):
                         print("Exiting video display...")
                         break
-
+                    """
             cap.release()
-            out.release()
             print(f"Joint angles saved as {angle_csv}")
         cv2.destroyAllWindows()
-        print(f"Annotated video saved as {output_video}")
 
 
 file_list = input("Enter video file paths separated by commas: ").split(',')
