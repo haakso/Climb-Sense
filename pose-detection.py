@@ -13,7 +13,7 @@ def compute_com(joints):
     return np.mean(joints, axis =0)
 
 # Function to process and annotate frames or images
-def annotate_frame(frame, pose):
+def annotate_frame(frame, pose, prev_data):
     # Get frame dimensions
     height, width, _ = frame.shape
 
@@ -53,7 +53,7 @@ def annotate_frame(frame, pose):
         l_arm_angle = calculate_angle(l_shoulder, l_elbow, l_wrist)
         r_arm_angle = calculate_angle(r_shoulder, r_elbow, r_wrist)
         l_leg_angle = calculate_angle(l_hip, l_knee, l_ankle)
-        r_leg_angle = calculate_angle(r_hip, r_knee, r_ankle
+        r_leg_angle = calculate_angle(r_hip, r_knee, r_ankle)
 
         
         com = compute_com([l_shoulder, r_shoulder, l_hip, r_hip])
