@@ -9,6 +9,9 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
 
+def compute_com(joints):
+    return np.mean(joints, axis =0)
+
 # Function to process and annotate frames or images
 def annotate_frame(frame, pose):
     # Get frame dimensions
@@ -50,7 +53,25 @@ def annotate_frame(frame, pose):
         l_arm_angle = calculate_angle(l_shoulder, l_elbow, l_wrist)
         r_arm_angle = calculate_angle(r_shoulder, r_elbow, r_wrist)
         l_leg_angle = calculate_angle(l_hip, l_knee, l_ankle)
-        r_leg_angle = calculate_angle(r_hip, r_knee, r_ankle)
+        r_leg_angle = calculate_angle(r_hip, r_knee, r_ankle
+
+        
+        com = compute_com([l_shoulder, r_shoulder, l_hip, r_hip])
+        timestamp = cv2.getTickCount() / cv2.getTickFrequency()
+
+        speed = 0
+
+        if prev_data["com"] is not None and prev_data["time"] is not None:
+            dt = timestamp - prev_data["time"]
+            if dt > 0:
+                velocity = (com - prev_data["com"]) / dt
+                speed = np.linalg.norm(velocity)
+                cv2.putText(frame, f"CoM Speed: {speed:.2f} m/s", (30, 30),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+        prev_data["com"] = com
+        prev_data["time"] = timestamp
+
 
         # Visualize angle
         joints = {
@@ -107,8 +128,10 @@ def process_files(file_list, is_image=True):
             angle_csv = f'joint_angles_{os.path.basename(file)}.csv'
             with open(angle_csv, 'w', newline='') as csv_file:
                 writer = csv.writer(csv_file)
-                writer.writerow(['Frame', 'Left Arm Angle', 'Right Arm Angle', 'Left Leg Angle', 'Right Leg Angle'])
+                writer.writerow(['Frame', 'Left Arm Angle', 'Right Arm Angle', 'Left Leg Angle', 'Right Leg Angle', 'CoM Velocity'])
                 frame_index = 0
+
+                prev_data = {"com": None, "time": None}
 
                 while cap.isOpened():
                     success, frame = cap.read()
@@ -117,9 +140,9 @@ def process_files(file_list, is_image=True):
                         break
 
                     # Process the current frame
-                    annotated_frame, angles = annotate_frame(frame, pose)
+                    annotated_frame, angles, speed = annotate_frame(frame, pose, prev_data)
 
-                    writer.writerow([frame_index] + list(map(float, angles)))
+                    writer.writerow([frame_index] + list(map(float, angles)) +[speed])
                     frame_index += 1
 
                     """
