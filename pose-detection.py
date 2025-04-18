@@ -4,6 +4,13 @@ import os
 import numpy as np
 import csv
 
+
+"""
+
+Adding comments to test how creating a branch in vs code
+
+"""
+
 # Initialize MediaPipe Pose solution
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
