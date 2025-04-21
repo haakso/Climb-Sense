@@ -101,7 +101,7 @@ def annotate_frame(frame, pose, prev_data):
             mp_pose.POSE_CONNECTIONS,
             landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
         )
-    return frame, angles
+    return angles, speed
 
 # Function to calculate joint angle
 def calculate_angle(a,b,c):
@@ -147,9 +147,9 @@ def process_files(file_list, is_image=True):
                         break
 
                     # Process the current frame
-                    annotated_frame, angles, speed = annotate_frame(frame, pose, prev_data)
+                    angles, speed = annotate_frame(frame, pose, prev_data)
 
-                    writer.writerow([frame_index] + list(map(float, angles)) +[speed])
+                    writer.writerow([frame_index] + np.array(angles).flatten().tolist() + [speed])
                     frame_index += 1
 
                     """
