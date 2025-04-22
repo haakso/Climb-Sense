@@ -131,11 +131,18 @@ def process_files(file_list, is_image=True):
                 print(f"Error opening video {file}")
                 continue
 
+            # Ask the user if the move was successful for this video
+            success_label = input(f"Was the move successful in '{file}'? (Yes/No): ").strip().capitalize()
+            if success_label not in ['Yes', 'No']:
+                print("Invalid input. Defaulting to 'No'.")
+                success_label = 'No'
+
+
             # Initialize CSV file
             angle_csv = f'joint_angles_{os.path.basename(file)}.csv'
             with open(angle_csv, 'w', newline='') as csv_file:
                 writer = csv.writer(csv_file)
-                writer.writerow(['Frame', 'Left Arm Angle', 'Right Arm Angle', 'Left Leg Angle', 'Right Leg Angle', 'CoM Velocity'])
+                writer.writerow(['Frame', 'Left Arm Angle', 'Right Arm Angle', 'Left Leg Angle', 'Right Leg Angle', 'CoM Velocity', 'Move Successful'])
                 frame_index = 0
 
                 prev_data = {"com": None, "time": None}
