@@ -156,7 +156,7 @@ def process_files(file_list, is_image=True):
                     # Process the current frame
                     angles, speed = annotate_frame(frame, pose, prev_data)
 
-                    writer.writerow([frame_index] + np.array(angles).flatten().tolist() + [speed])
+                    writer.writerow([frame_index] + np.array(angles).flatten().tolist() + [speed, success_label])
                     frame_index += 1
 
                     """
