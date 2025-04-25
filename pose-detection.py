@@ -31,6 +31,7 @@ def annotate_frame(frame, pose, prev_data):
     results = pose.process(frame_rgb)
 
     angles = [None, None, None, None]
+    speed = 0
     # Annotate the frame if landmarks are detected
     if results.pose_landmarks:
         # Calculate and display joint angles
@@ -65,8 +66,6 @@ def annotate_frame(frame, pose, prev_data):
         
         com = compute_com([l_shoulder, r_shoulder, l_hip, r_hip])
         timestamp = cv2.getTickCount() / cv2.getTickFrequency()
-
-        speed = 0
 
         if prev_data["com"] is not None and prev_data["time"] is not None:
             dt = timestamp - prev_data["time"]
